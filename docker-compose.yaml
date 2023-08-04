@@ -1,0 +1,40 @@
+version: '3.8'
+
+networks:
+  laravel:
+    name: laravel
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
+#    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+      - "3000:80"
+      - "8443:443"
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - laravel
+
+  php:
+    image: php:8.1-fpm-alpine
+    container_name: php
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - laravel
+
+  mysql:
+    image: mysql:8.1.0
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE : laraveldb
+      MYSQL_USER : laravel
+      MYSQL_PASSWORD : password
+      MYSQL_ROOT_PASSWORD: password
+    networks:
+      - laravel
+
