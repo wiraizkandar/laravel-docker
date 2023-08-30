@@ -11,16 +11,23 @@ services:
       dockerfile: nginx.dockerfile
 #    image: nginx:stable-alpine
     container_name: nginx
+    depends_on:
+      - mysql
+      - php
     ports:
       - "3000:80"
       - "8443:443"
+#      - "5173:5173"
     volumes:
       - ./src:/var/www/html
     networks:
       - laravel
 
   php:
-    image: php:8.1-fpm-alpine
+#    image: php:8.1-fpm-alpine
+    build:
+      context: .
+      dockerfile: php.dockerfile
     container_name: php
     volumes:
       - ./src:/var/www/html
@@ -30,6 +37,10 @@ services:
   mysql:
     image: mysql:8.1.0
     container_name: mysql
+    ports:
+      - "4306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
     environment:
       MYSQL_DATABASE : laraveldb
       MYSQL_USER : laravel
@@ -37,4 +48,46 @@ services:
       MYSQL_ROOT_PASSWORD: password
     networks:
       - laravel
+
+  composer:
+    image: composer:latest
+    container_name: composer
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - laravel
+
+  artisan:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    container_name: artisan
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+    entrypoint:
+      - php
+      - artisan
+    networks:
+      - laravel
+
+  npm:
+    image: node:latest
+    container_name: npm
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/certs:/etc/vite/certs
+    working_dir: /var/www/html
+    ports:
+      - "5173:5173"
+#      - "3000:3000"
+      - "3001:3001"
+    entrypoint:
+      - npm
+    networks:
+      - laravel
+
+
+
 
